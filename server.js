@@ -22,6 +22,9 @@ wss.on('connection', (ws) => {
         if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
             ws.partner.send(messageText);
         }
+        if (messageText === '__typing__' && ws.partner && ws.partner.readyState === WebSocket.OPEN) {
+            ws.partner.send('__typing__');
+        }
     });
 
     ws.on('close', () => {
