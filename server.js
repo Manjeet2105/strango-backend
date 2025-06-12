@@ -17,10 +17,9 @@ wss.on('connection', (ws) => {
         ws.send("⌛ Waiting for a stranger to connect...");
     }
 
-    ws.on('message', async (msg) => {
-        const messageText = typeof msg === 'string' ? msg : await msg.text();
+    ws.on('message', (msg) => {
         if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
-            ws.partner.send(messageText);
+            ws.partner.send(msg);
         }
     });
 
