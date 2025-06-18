@@ -1,22 +1,10 @@
-
 const WebSocket = require('ws');
 const PORT = process.env.PORT || 3000;
 
 const wss = new WebSocket.Server({ port: PORT });
 const waitingUsers = [];
 
-function broadcastOnlineCount() {
-    const countMsg = `__count__${wss.clients.size}`;
-    for (const client of wss.clients) {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(countMsg);
-        }
-    }
-}
-
 wss.on('connection', (ws) => {
-    broadcastOnlineCount();
-
     if (waitingUsers.length > 0) {
         const pair = waitingUsers.pop();
         ws.partner = pair;
@@ -30,25 +18,12 @@ wss.on('connection', (ws) => {
     }
 
     ws.on('message', (msg) => {
-        try {
-            if (typeof msg === 'string' && msg.startsWith("__count__")) return;
-
-            // Handle signaling JSON messages
-            const data = JSON.parse(msg);
-            if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
-                ws.partner.send(JSON.stringify(data));
-            }
-        } catch (e) {
-            // Fallback to plain text messages
-            if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
-                ws.partner.send(msg);
-            }
+        if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
+            ws.partner.send(msg);
         }
     });
 
     ws.on('close', () => {
-        broadcastOnlineCount();
-
         if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
             ws.partner.send("❌ Stranger disconnected.");
             ws.partner.partner = null;
@@ -59,4 +34,4 @@ wss.on('connection', (ws) => {
     });
 });
 
-console.log(`WebSocket server with signaling running on port ${PORT}`);
+console.log(`WebSocket server running on port ${PORT}`);
